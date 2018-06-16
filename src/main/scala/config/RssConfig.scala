@@ -1,5 +1,4 @@
 package config
 
 case class RssConfig(feedUrl: List[String],
-                     trendsUrl: String,
-                     saveFile: String)
+                     trendsUrl: String)

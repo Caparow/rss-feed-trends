@@ -11,6 +11,7 @@ import config.RssConfig
 import play.api.libs.json.Json
 import rssReader._
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.io.Source
@@ -19,6 +20,8 @@ class TrendsServiceImpl @Inject() (rssConfig: RssConfig,
                                    implicit val system: ActorSystem)
   extends TrendsService
     with RssJsonSupport{
+
+  private val feed: ListBuffer[TrendItem] = ListBuffer.empty
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
   implicit val timeout = Timeout(30.seconds)
@@ -34,15 +37,12 @@ class TrendsServiceImpl @Inject() (rssConfig: RssConfig,
   }
 
   private def writeToFile(res: List[TrendItem]): Unit = {
-    val str = Json.prettyPrint(Json.toJson(res))
-    val file = new File(rssConfig.saveFile)
-    val bw = new BufferedWriter(new FileWriter(file))
-    bw.write(str)
-    bw.close()
+    feed.clear()
+    feed ++= res
   }
 
   override def getFeed: String = {
-    Source.fromFile(rssConfig.saveFile).getLines().mkString("\n")
+    Json.prettyPrint(Json.toJson(feed.toList))
   }
 
   override def updateFeed: Unit = {
@@ -61,7 +61,7 @@ class TrendsServiceImpl @Inject() (rssConfig: RssConfig,
       val lowerTrends = trends.items.map(_.title.toLowerCase())
       rss.flatten.map(checkTitleForTrend(_, lowerTrends)).filter(_.trend.nonEmpty)
     }
-    val res = Await.result(filtered, 3.seconds)
+    val res = Await.result(filtered, 10.seconds)
     writeToFile(res)
     rssReader ! PoisonPill
   }

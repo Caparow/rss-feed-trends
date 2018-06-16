@@ -45,6 +45,6 @@ class XmlReader extends BaseActor {
   def receive() = {
     case xml: Elem =>
       extract(xml) pipeTo sender
-      context.system.scheduler.scheduleOnce(5.second, self, PoisonPill)
+      context.system.scheduler.scheduleOnce(10.second, self, PoisonPill)
   }
 }

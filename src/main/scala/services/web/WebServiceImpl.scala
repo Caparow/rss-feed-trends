@@ -41,6 +41,8 @@ class WebServiceImpl @Inject()(webServiceConfig: WebServiceConfig,
       (get & pathEnd) {
         complete(HttpEntity(ContentTypes.`application/json`, trendsService.getFeed))
       }
+    } ~ get {
+      complete(OK)
     }
 
   override def startApplication: Unit = {
